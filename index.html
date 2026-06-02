@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>太阳_进击中 — 动画师 / 视频剪辑师</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      screens: { xs: '480px' },
+      colors: {
+        bg: '#faf8f5', surface: '#f0ede8', accent: '#ff6b6b', accent2: '#4ecdc4',
+        text: '#2d2d2d', muted: '#999590', muted2: '#c5c0b8',
+      },
+    },
+  },
+}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #faf8f5; color: #2d2d2d; overflow-x: hidden; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #ff6b6b; border-radius: 2px; }
+  ::selection { background: #ff6b6b; color: #fff; }
+  .nav-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+  .font-display {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Heiti SC", sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  .font-mono { font-family: "JetBrains Mono", "SF Mono", "Menlo", monospace; }
+
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ===== 设计辅助元素 ===== */
+  .section-number {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: #c5c0b8;
+    opacity: 0.5;
+  }
+  .accent-line {
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b6b, transparent 80%);
+    width: 80px;
+    margin-bottom: 1.5rem;
+  }
+  .accent-line-center {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff6b6b, transparent);
+    width: 120px;
+    margin: 0 auto 1.5rem;
+  }
+  .dot-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, #c5c0b8 0.5px, transparent 0.5px);
+    background-size: 24px 24px;
+    opacity: 0.25;
+  }
+  .corner-deco {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-color: #ff6b6b;
+    opacity: 0.12;
+  }
+  .corner-deco.tl { top: 0; left: 0; border-top: 2px solid; border-left: 2px solid; }
+  .corner-deco.br { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; }
+
+  /* ===== 轮播 ===== */
+  .carousel-container { position: relative; overflow: hidden; }
+  .carousel-track { display: flex; transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1); }
+  .carousel-slide { min-width: 100%; position: relative; }
+  .carousel-slide-bg { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; }
+  .carousel-dots { position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.75rem; z-index: 20; }
+  .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,107,107,0.25); cursor: pointer; transition: all 0.4s ease; }
+  .carousel-dot.active { background: #ff6b6b; width: 28px; border-radius: 4px; }
+
+  @keyframes slideInUp { 0% { opacity:0; transform:translateY(40px); } 100% { opacity:1; transform:translateY(0); } }
+  @keyframes slideInLeft { 0% { opacity:0; transform:translateX(-60px); } 100% { opacity:1; transform:translateX(0); } }
+  @keyframes slideInRight { 0% { opacity:0; transform:translateX(60px); } 100% { opacity:1; transform:translateX(0); } }
+  @keyframes fadeIn { 0% { opacity:0; } 100% { opacity:1; } }
+  .carousel-slide.active .anim-up { animation: slideInUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+  .carousel-slide.active .anim-left { animation: slideInLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+  .carousel-slide.active .anim-right { animation: slideInRight 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+  .carousel-slide.active .anim-fade { animation: fadeIn 1s ease 0.5s both; }
+
+  .carousel-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 20;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(250,248,245,0.9); border: 1px solid #c5c0b8;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s ease; color: #999590; font-size: 20px;
+  }
+  .carousel-arrow:hover { background: #fff; border-color: #ff6b6b; color: #ff6b6b; }
+  .carousel-arrow.left { left: 2rem; }
+  .carousel-arrow.right { right: 2rem; }
+  @media (max-width: 640px) {
+    .carousel-arrow { width: 36px; height: 36px; font-size: 16px; }
+    .carousel-arrow.left { left: 0.5rem; }
+    .carousel-arrow.right { right: 0.5rem; }
+  }
+
+  @keyframes scroll-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+  .scroll-indicator { animation: scroll-bounce 2s ease-in-out infinite; }
+
+  /* ===== 作品集卡片 ===== */
+  .portfolio-card { transition: transform 0.4s ease; position: relative; overflow: hidden; border-radius: 4px; }
+  .portfolio-card::after { content: ''; position: absolute; inset: 0; border: 2px solid transparent; transition: border-color 0.4s ease; pointer-events: none; z-index: 2; border-radius: 4px; }
+  .portfolio-card:hover::after { border-color: #ff6b6b; }
+  .portfolio-card .card-overlay { position: absolute; top: 0.75rem; right: 0.75rem; max-width: 70%; opacity: 0; transition: opacity 0.25s ease; z-index: 1; border-radius: 2px; }
+  .portfolio-card:hover .card-overlay { opacity: 1; }
+  .portfolio-card .pf-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .portfolio-card video.pf-media { pointer-events: none; }
+  .portfolio-card audio { position: absolute; bottom: 0.5rem; left: 0.5rem; right: 0.5rem; z-index: 3; height: 28px; }
+
+  /* ===== 动态展示 ===== */
+  @keyframes reel-scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(200%); } }
+  .reel-scan-line { animation: reel-scan 3s linear infinite; }
+  @keyframes nodePulse { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.3); } }
+  @keyframes status-pulse { 0%, 100% { box-shadow: 0 0 4px #4ecdc4; } 50% { box-shadow: 0 0 16px #4ecdc4, 0 0 32px rgba(78,205,196,0.25); } }
+  .status-dot { animation: status-pulse 2s ease-in-out infinite; }
+  .section-alt { background: #f0ede8; }
+
+  /* ===== 雷达图 ===== */
+  .radar-grid { stroke: #c5c0b8; stroke-width: 1; fill: none; opacity: 0.3; }
+  .radar-axis { stroke: #c5c0b8; stroke-width: 0.5; opacity: 0.2; }
+  .radar-area { fill: #ff6b6b; opacity: 0.12; stroke: #ff6b6b; stroke-width: 2; transition: all 1s ease-out; }
+  .radar-dot { fill: #ff6b6b; transition: all 0.3s ease; }
+  @keyframes radar-pulse { 0%,100% { r:5; opacity:1; } 50% { r:9; opacity:0.5; } }
+  .radar-dot-highlight { fill: #ff3b3b; }
+  .radar-glow { fill: none; stroke: #ff6b6b; stroke-width: 2; opacity: 0; transition: all 0.3s ease; }
+  .radar-glow.active { opacity: 0.35; animation: radar-pulse 1.2s ease-in-out infinite; }
+  .radar-axis-highlight { stroke: #ff6b6b; stroke-width: 1.8; opacity: 0.5; transition: all 0.3s ease; }
+  .radar-wedge { fill: #ff6b6b; opacity: 0.08; stroke: #ff6b6b; stroke-width: 1.5; stroke-opacity: 0.25; transition: all 0.3s ease; pointer-events: none; }
+  .radar-label { font-family: "JetBrains Mono", monospace; font-size: 11px; fill: #2d2d2d; text-anchor: middle; transition: all 0.3s ease; cursor: pointer; }
+  .radar-label-highlight { fill: #ff6b6b; font-weight: 700; font-size: 13px; }
+  .radar-value { font-family: "JetBrains Mono", monospace; font-size: 10px; fill: #ff6b6b; text-anchor: middle; transition: all 0.3s ease; }
+  .radar-value-highlight { fill: #ff3b3b; font-weight: 700; font-size: 12px; }
+  .skill-row { transition: all 0.25s ease; border-left: 3px solid transparent; cursor: pointer; border-radius: 0 4px 4px 0; }
+  .skill-row:hover, .skill-row.hovered { background: rgba(255,107,107,0.06); border-left-color: #ff6b6b; }
+  .skill-row:hover .skill-score, .skill-row.hovered .skill-score { color: #ff3b3b; }
+
+  /* ===== Lightbox ===== */
+  @keyframes lbFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes lbScaleIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+  .lightbox-backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    display: flex; align-items: center; justify-content: center;
+    animation: lbFadeIn 0.3s ease; cursor: pointer;
+  }
+  .lightbox-content { max-width: 92vw; max-height: 90vh; animation: lbScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); cursor: default; position: relative; }
+  .lightbox-content img, .lightbox-content video { max-width: 92vw; max-height: 85vh; border-radius: 4px; box-shadow: 0 24px 80px rgba(0,0,0,0.5); object-fit: contain; }
+  .lightbox-close { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 101; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+  .lightbox-close:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); }
+  .lightbox-info { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 101; font-family: "JetBrains Mono", monospace; font-size: 11px; color: rgba(255,255,255,0.6); text-align: center; pointer-events: none; }
+  .lightbox-info .lb-title { color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, createContext, useContext } = React;
+const AppContext = createContext();
+
+const STORAGE_KEY = 'chenmoSiteState';
+const DB_NAME = 'chenmoMediaDB';
+const DB_VERSION = 1;
+
+const defaultMeta = {
+  1:{title:'城市呼吸',cat:'MG动画',desc:'动态图形短片，探索都市与自然的视觉表达。',color:'#fce8e8'},
+  2:{title:'山海经·异兽录',cat:'3D动画',desc:'独立短片，Blender全流程，入围费那奇动画周。',color:'#e8f4fc'},
+  3:{title:'光合作用',cat:'宣传片',desc:'新能源品牌宣传片，全片剪辑与调色。',color:'#fdf3e0'},
+  4:{title:'WAVES',cat:'实验短片',desc:'音乐驱动视觉，AE粒子+表达式音频可视化。',color:'#f0e8fc'},
+  5:{title:'人间有味',cat:'纪录片',desc:'美食人文纪录，主剪辑师，单集播放破百万。',color:'#e8faf0'},
+  6:{title:'跃迁',cat:'商业TVC',desc:'科技产品发布会开场，合成与动态设计。',color:'#fce8f0'}
+};
+const defaultSkills = [
+  {name:'DaVinci Resolve',level:92},{name:'After Effects',level:90},
+  {name:'Premiere Pro',level:85},{name:'Blender',level:72},{name:'Cinema 4D',level:65}
+];
+const defaultTags = ['调色','剪辑','合成','MG动画','3D建模','音效设计','动态图形','脚本编写'];
+const defaultTimeline = [
+  {year:'2024',title:'自由剪辑师 / 动画师',org:'Freelance',desc:'服务品牌客户十余家，涵盖TVC、纪录片、MG动画等多种类型。'},
+  {year:'2022',title:'高级视频设计师',org:'光合传媒',desc:'主导动画团队日常产出，搭建内部Motion资产库，效率提升40%。'},
+  {year:'2020',title:'后期剪辑师',org:'万象影业',desc:'参与多部网剧后期制作，负责剪辑、调色与后期合成全流程。'},
+  {year:'2018',title:'数字媒体艺术 本科',org:'中国传媒大学',desc:'毕设动画短片《归墟》获学院奖最佳视觉设计。'}
+];
+const defaultCarouselSlides = [
+  {id:1,tag:'动画师 / 视频剪辑师',heading:'太阳_进击中',subheading:'用动态讲述故事，让每一帧都有呼吸',bottom:'',bgGradient:'linear-gradient(135deg, #fce8e8 0%, #faf8f5 50%, #e8faf0 100%)'},
+  {id:2,tag:'6 年行业经验',heading:'从剪辑到合成<br/>全流程驾驭',subheading:'',bottom:'DaVinci Resolve · After Effects · Blender · Cinema 4D',bgGradient:'linear-gradient(135deg, #e8f4fc 0%, #faf8f5 40%, #fce8f0 100%)'},
+  {id:3,tag:'精选作品',heading:'TVC · MG动画<br/>独立短片',subheading:'',bottom:'服务品牌客户十余家，入围费那奇动画周',bgGradient:'linear-gradient(135deg, #fdf3e0 0%, #faf8f5 50%, #e8faf0 100%)'},
+  {id:4,tag:'开放合作',heading:'欢迎联系',subheading:'chenmo@example.com',bottom:'接受自由职业委托',bgGradient:'linear-gradient(135deg, #f0e8fc 0%, #faf8f5 60%, #fce8e8 100%)'}
+];
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+
+// IndexedDB
+let db = null;
+const initDb = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open(DB_NAME, DB_VERSION);
+  req.onerror = () => reject('DB error');
+  req.onsuccess = () => { db = req.result; resolve(db); };
+  req.onupgradeneeded = e => {
+    const d = e.target.result;
+    if (!d.objectStoreNames.contains('media')) d.createObjectStore('media', { keyPath: 'id' });
+  };
+});
+const getMedia = id => new Promise((resolve, reject) => {
+  if (!db) return reject('DB not ready');
+  const tx = db.transaction('media', 'readonly');
+  const store = tx.objectStore('media');
+  const req = store.get(id);
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject('Read error');
+});
+
+const getMediaURL = (record) => {
+  if (!record) return null;
+  if (record.blob) return URL.createObjectURL(record.blob);
+  if (record.data) return record.data;
+  return null;
+};
+
+const navLinks = [
+  {id:'hero',label:'首页'},{id:'portfolio',label:'作品集'},{id:'demo',label:'动态展示'},
+  {id:'skills',label:'技能'},{id:'timeline',label:'经历'},{id:'contact',label:'联系'},
+  {href:'admin.html',label:'后台',external:true}
+];
+
+function useReveal() {
+  const ref=useRef(null); const [v,sv]=useState(false);
+  useEffect(()=>{ const el=ref.current; if(!el)return; const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){sv(true);o.unobserve(el)}},{threshold:0.12,rootMargin:'0px 0px -40px 0px'}); o.observe(el); return ()=>o.disconnect() },[]);
+  return [ref,v];
+}
+
+// ===== 通用 Section Header =====
+function SectionHeader({ number, title, center }) {
+  return (
+    <div className={`${center?'text-center':''}`}>
+      <span className="section-number">{String(number).padStart(2,'0')} /</span>
+      <h2 className="font-display text-4xl sm:text-5xl md:text-6xl text-text mt-2 mb-3">{title}</h2>
+      <div className={center ? 'accent-line-center' : 'accent-line'}></div>
+    </div>
+  );
+}
+
+function Navbar() {
+  const [scrolled,ss]=useState(false); const [as,sas]=useState('hero'); const { avatar } = useContext(AppContext);
+  useEffect(()=>{ const onS=()=>{ ss(window.scrollY>40); const sec=navLinks.map(l=>l.id&&document.getElementById(l.id)).filter(Boolean); for(let i=sec.length-1;i>=0;i--){const r=sec[i].getBoundingClientRect();if(r.top<=120){sas(navLinks[i].id);break}}}; window.addEventListener('scroll',onS,{passive:true}); return ()=>window.removeEventListener('scroll',onS) },[]);
+  const st=(id)=>document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
+  return (
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled?'nav-blur bg-bg/88 border-b border-muted2/40 py-2':'bg-transparent py-3'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex items-center justify-end pl-[40%]">
+        <button onClick={()=>st('hero')} className="flex items-center gap-2 text-text hover:text-accent transition-colors flex-shrink-0 mr-auto">
+          {avatar && <img src={avatar} className="w-6 h-6 rounded-full object-cover" />}
+          <span className="font-mono text-[11px] tracking-wider">太阳_进击中</span>
+        </button>
+        <div className="hidden md:flex items-center gap-4 lg:gap-6">
+          {navLinks.map(l=>l.external?
+            <a key={l.label} href={l.href} target="_blank" rel="noopener" className="font-mono text-[11px] tracking-wider text-muted hover:text-accent transition-colors">{l.label}</a>:
+            <button key={l.id} onClick={()=>st(l.id)} className="group font-mono text-[11px] tracking-wider text-muted hover:text-accent transition-colors relative pb-1">
+              {l.label}
+              <div className="absolute left-0 bottom-0 w-full h-0.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+            </button>
+          )}
+        </div>
+        <div className="flex md:hidden gap-1.5">
+          {navLinks.map(l=>l.external?
+            <a key={l.label} href={l.href} target="_blank" rel="noopener" className="w-1.5 h-1.5 rounded-full bg-accent2"/>:
+            <button key={l.id} onClick={()=>st(l.id)} className={`w-1.5 h-1.5 rounded-full transition-colors ${as===l.id?'bg-accent':'bg-muted2'}`}/>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function HeroCarousel() {
+  const { carouselSlides, carouselImages } = useContext(AppContext);
+  const slidesData = (carouselSlides && carouselSlides.length > 0) ? carouselSlides : defaultCarouselSlides;
+  const [active,sa]=useState(0); const [paused,sp]=useState(false);
+  useEffect(()=>{if(paused)return;const id=setInterval(()=>sa(a=>(a+1)%slidesData.length),5000);return ()=>clearInterval(id)},[paused, slidesData.length]);
+
+  const renderSlideContent = (s) => {
+    const headingParts = (s.heading||'').split('<br/>');
+    return (
+      <>
+        {s.tag && <div className="anim-up"><p className="font-mono text-accent text-[10px] sm:text-xs tracking-[0.3em] uppercase mb-4 sm:mb-6">{s.tag}</p></div>}
+        {s.heading && <div className="anim-left"><h2 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-9xl text-text tracking-tight mb-3 sm:mb-4" dangerouslySetInnerHTML={{__html: headingParts.join('<br/>')}}/></div>}
+        {s.subheading && <div className="anim-right"><p className="font-mono text-xs sm:text-sm text-muted tracking-wider mb-3 sm:mb-4">{s.subheading}</p></div>}
+        {s.bottom && <div className="anim-fade"><p className="font-mono text-[11px] sm:text-sm text-muted2">{s.bottom}</p></div>}
+      </>
+    );
+  };
+
+  return (
+    <section id="hero" className="carousel-container min-h-screen" onMouseEnter={()=>sp(true)} onMouseLeave={()=>sp(false)}>
+      <div className="carousel-track h-screen" style={{transform:`translateX(-${active*100}%)`}}>
+        {slidesData.map((s,idx)=>{
+          const img = carouselImages && carouselImages[s.id];
+          return (
+            <div key={s.id||idx} className={`carousel-slide h-screen flex items-center justify-center ${idx===active?'active':''}`}>
+              {img && <div className="carousel-slide-bg" style={{backgroundImage:`url(${img})`}}/>}
+              <div className={`absolute inset-0 z-0 ${img ? 'bg-bg/30' : ''}`} style={!img ? {background:s.bgGradient||''} : {}}/>
+              {/* 辅助装饰：环形与网格 */}
+              <div className="absolute inset-0 z-0 pointer-events-none" style={{backgroundImage:'radial-gradient(circle at 25% 30%, rgba(255,107,107,0.04) 0%, transparent 50%), radial-gradient(circle at 75% 70%, rgba(78,205,196,0.04) 0%, transparent 50%)'}}/>
+              <div className="text-center z-10 px-4 sm:px-6 max-w-4xl">{renderSlideContent(s)}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="carousel-dots" style={{bottom:'1.5rem'}}>{slidesData.map((_,idx)=><div key={idx} className={`carousel-dot ${idx===active?'active':''}`} onClick={()=>sa(idx)}/>)}</div>
+      {slidesData.length > 1 && <>
+        <button className="carousel-arrow left" onClick={()=>sa((active-1+slidesData.length)%slidesData.length)}>&#10094;</button>
+        <button className="carousel-arrow right" onClick={()=>sa((active+1)%slidesData.length)}>&#10095;</button>
+      </>}
+      <div className="absolute bottom-8 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 z-10">
+        <div className="w-px h-6 sm:h-8 bg-accent/30 overflow-hidden"><div className="w-full h-3 bg-accent scroll-indicator rounded-full"/></div>
+      </div>
+    </section>
+  );
+}
+
+function Lightbox({ media, onClose }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+  if (!media) return null;
+  const renderMedia = () => {
+    switch (media.type) {
+      case 'video': return <video src={media.src} controls autoPlay className="max-w-[92vw] max-h-[85vh] rounded shadow-2xl" style={{boxShadow:'0 24px 80px rgba(0,0,0,0.5)'}}/>;
+      case 'image': case 'gif': return <img src={media.src} alt={media.title||''} className="max-w-[92vw] max-h-[85vh] rounded shadow-2xl object-contain" style={{boxShadow:'0 24px 80px rgba(0,0,0,0.5)'}}/>;
+      case 'audio': return (<div className="text-center" style={{background:media.color||'#faf8f5',borderRadius:'8px',padding:'3rem 2rem',minWidth:'320px'}}><span className="text-6xl block mb-4 opacity-30">{media.emoji||'♫'}</span><p className="font-mono text-sm text-white/80 mb-4">{media.title}</p><audio src={media.src} controls className="w-full max-w-md mx-auto"/></div>);
+      case 'placeholder': return (<div className="text-center" style={{background:media.color||'#faf8f5',borderRadius:'8px',padding:'4rem 3rem',minWidth:'360px',boxShadow:'0 24px 80px rgba(0,0,0,0.5)'}}><span className="text-7xl block mb-6 opacity-30">{media.emoji||'⬡'}</span><p className="font-mono text-sm text-white/80 mb-2">{media.title}</p><p className="font-mono text-xs text-white/40">{media.desc}</p></div>);
+      default: return <img src={media.src} alt={media.title||''} className="max-w-[92vw] max-h-[85vh] rounded shadow-2xl object-contain" style={{boxShadow:'0 24px 80px rgba(0,0,0,0.5)'}}/>;
+    }
+  };
+  return (<div className="lightbox-backdrop" onClick={onClose}><button className="lightbox-close" onClick={onClose}>&times;</button><div className="lightbox-content" onClick={e => e.stopPropagation()}>{renderMedia()}</div>{media.title && media.type !== 'placeholder' && (<div className="lightbox-info"><div className="lb-title">{media.title}</div>{media.cat && <div>{media.cat}</div>}</div>)}</div>);
+}
+
+// ===== 作品集 =====
+function Portfolio() {
+  const [ref,v]=useReveal(); const cardsRef=useRef([]); const { portfolioMeta, portfolioMedia, portfolioFiles, portfolioOrder } = useContext(AppContext);
+  const [lightbox, setLightbox] = useState(null);
+  const pm = portfolioMeta || defaultMeta;
+  const rawIds = Object.keys(pm).map(Number).sort((a,b)=>a-b);
+  const order = portfolioOrder || rawIds;
+  const ids = order.filter(id => pm[id] != null).length > 0 ? order.filter(id => pm[id] != null) : rawIds;
+  const items = ids.map(id=>({id,...(pm[id]||defaultMeta[id])}));
+
+  const hmm=useCallback((e,idx)=>{const c=cardsRef.current[idx];if(!c)return;const r=c.getBoundingClientRect();c.style.transform=`perspective(800px) rotateY(${((e.clientX-r.left)/r.width-0.5)*8}deg) rotateX(${-((e.clientY-r.top)/r.height-0.5)*8}deg) translateZ(10px) scale(1.08)`},[]);
+  const hml=useCallback(idx=>{const c=cardsRef.current[idx];if(c)c.style.transform='perspective(800px) rotateY(0) rotateX(0) translateZ(0) scale(1)'},[]);
+
+  const openLightbox = (item) => {
+    const meta = portfolioMedia?.[item.id];
+    const src = portfolioFiles?.[item.id];
+    if (!src) return;
+    const type = meta?.type || 'image';
+    if (type==='video'||type==='image'||type==='gif'||type==='audio') setLightbox({ src, type, title: item.title, cat: item.cat, color: item.color });
+  };
+
+  return (
+    <section id="portfolio" ref={ref} className="py-24 sm:py-32 px-4 sm:px-6 md:px-8 lg:px-16 max-w-7xl mx-auto relative">
+      <div className="corner-deco tl" style={{left:'-20px',top:'-20px'}}></div>
+      <div className={`reveal ${v?'visible':''} mb-12 sm:mb-16`}>
+        <SectionHeader number={1} title="作品集" />
+      </div>
+      <div className={items.length <= 9 ? "grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" : "overflow-y-auto grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"} style={items.length > 9 ? {maxHeight:'724px',padding:'12px 20px'} : {overflow:'visible',padding:'12px 20px'}}>
+        {items.map((item,idx)=>{
+          const meta=portfolioMedia?.[item.id];
+          const src=portfolioFiles?.[item.id];
+          const mediaType = meta?.type || (src ? 'image' : null);
+          const hasMedia = src && mediaType && (mediaType==='video'||mediaType==='image'||mediaType==='gif'||mediaType==='audio');
+          return (
+          <div key={item.id} ref={el=>cardsRef.current[idx]=el} className={`portfolio-card reveal ${v?'visible':''} shadow-sm hover:shadow-lg`} style={{backgroundColor:item.color,aspectRatio:'16/9',transitionDelay:`${idx*0.1}s`,cursor:hasMedia?'pointer':'default'}} onMouseMove={e=>hmm(e,idx)} onMouseLeave={()=>hml(idx)} onClick={()=>openLightbox(item)}>
+            {src ? (
+              mediaType==='video'?<video src={src} className="pf-media" autoPlay loop muted playsInline preload="auto"/>:
+              mediaType==='gif'?<img src={src} alt={item.title} className="pf-media"/>:
+              mediaType==='audio'?<><div className="absolute inset-0 flex items-center justify-center"><span className="font-mono text-5xl sm:text-7xl text-muted/10 select-none">{String(idx+1).padStart(2,'0')}</span></div><audio src={src} controls preload="metadata"/></>:
+              <img src={src} alt={item.title} className="pf-media"/>
+            ):<div className="absolute inset-0 flex items-center justify-center pointer-events-none"><span className="font-mono text-5xl sm:text-7xl text-muted/10 select-none">{String(idx+1).padStart(2,'0')}</span></div>}
+            <div className="card-overlay flex flex-col items-end gap-0.5"><span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/90" style={{textShadow:'0 1px 3px rgba(0,0,0,0.6)'}}>{item.cat}</span><span className="font-display text-sm text-white leading-tight text-right" style={{textShadow:'0 1px 4px rgba(0,0,0,0.7)'}}>{item.title}</span><span className="font-mono text-[10px] text-white/80 leading-tight text-right" style={{textShadow:'0 1px 3px rgba(0,0,0,0.5)'}}>{item.desc}</span></div>
+          </div>
+        )})}
+      </div>
+      {lightbox && <Lightbox media={lightbox} onClose={() => setLightbox(null)} />}
+    </section>
+  );
+}
+
+// ===== 动态展示 =====
+function DemoReel() {
+  const { demoReel, demoReelMedia, demoCoverMedia } = useContext(AppContext);
+  const [ref,v]=useReveal(); const [ac,sa]=useState(0); const [ip,sp]=useState(false);
+  const [progress,setProgress]=useState(0);
+  const [lightbox, setLightbox] = useState(null);
+  const [displayTime, setDisplayTime] = useState('00:00.00');
+  const [duration, setDuration] = useState(0);
+  const [fps, setFps] = useState(30);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimerRef = useRef(null);
+  const videoRef=useRef(null); const animRef=useRef(null);
+  // Video thumbnail generation
+  const [videoThumbnails, setVideoThumbnails] = useState({});
+  const thumbAttemptedRef = useRef(new Set());
+  // Refs for scrub handlers to avoid stale closure
+  const maxDurRef=useRef(0); const fpsRef=useRef(30); const ipRef=useRef(false);
+  const defaultDemoReel=[{id:1,title:'城市呼吸 - MG动画',desc:'动态图形设计 | 2分30秒',color:'#fce8e8',emoji:'⬡',duration:'02:30'},{id:2,title:'山海经·异兽录 - 3D短片',desc:'Blender全流程 | 4分12秒',color:'#e8f4fc',emoji:'⬢',duration:'04:12'},{id:3,title:'光合作用 - 宣传片',desc:'剪辑+调色 | 3分00秒',color:'#fdf3e0',emoji:'◇',duration:'03:00'},{id:4,title:'WAVES - 实验视觉',desc:'AE粒子系统 | 1分45秒',color:'#f0e8fc',emoji:'◈',duration:'01:45'}];
+  const clips = (demoReel && demoReel.length>0) ? demoReel : defaultDemoReel;
+  const currentClip = clips[ac] || clips[0];
+  const rawMedia = demoReelMedia && demoReelMedia[currentClip.id];
+  const mediaData = typeof rawMedia === 'string' ? rawMedia : rawMedia?.url;
+  const mediaType = typeof rawMedia === 'string' ? (rawMedia.startsWith('data:video') ? 'video' : 'image') : rawMedia?.type;
+  const hasVideo = mediaType === 'video' || (typeof mediaData === 'string' && mediaData.startsWith('data:video'));
+
+  // Parse MM:SS duration to seconds
+  const parseDur = (d) => { const [m,s]=String(d||'00:00').split(':'); return parseInt(m)*60+parseInt(s); };
+  const maxDur = hasVideo ? duration : parseDur(currentClip.duration);
+  const frameRate = hasVideo ? fps : 30;
+  // Keep refs in sync
+  maxDurRef.current = maxDur;
+  fpsRef.current = frameRate;
+  ipRef.current = ip;
+
+  // Format time as MM:SS:FF
+  const fmtTime = (totalSec, fr) => {
+    const r = fr || frameRate;
+    const m = Math.floor(totalSec / 60);
+    const s = Math.floor(totalSec % 60);
+    const f = Math.floor(((totalSec % 1) * r) % r);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(f).padStart(2,'0')}`;
+  };
+
+  // Update progress from video via rAF (smoother)
+  const rafSyncRef = useRef(null);
+  const syncFromVideo = () => {
+    if (rafSyncRef.current) cancelAnimationFrame(rafSyncRef.current);
+    const tick = () => {
+      const v = videoRef.current;
+      if (!v || !hasVideo || v.paused) { rafSyncRef.current = null; return; }
+      if (v.duration && isFinite(v.duration)) {
+        setDuration(v.duration);
+        const pct = (v.currentTime / v.duration) * 100;
+        setProgress(Math.min(pct, 100));
+        setDisplayTime(fmtTime(v.currentTime));
+      }
+      rafSyncRef.current = requestAnimationFrame(tick);
+    };
+    rafSyncRef.current = requestAnimationFrame(tick);
+  };
+  const stopRafSync = () => { if(rafSyncRef.current){cancelAnimationFrame(rafSyncRef.current);rafSyncRef.current=null;} };
+
+  // Jump to clip
+  const jumpToClip = (idx) => {
+    stopAll();
+    sa(idx);
+    setProgress(0);
+    setDisplayTime('00:00.00');
+  };
+
+  // Play/pause toggle
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (hasVideo && v) {
+      if (ip) { v.pause(); sp(false); stopRafSync(); setControlsVisible(true); }
+      else { v.play().catch(()=>{ startSim(); }); sp(true); syncFromVideo(); scheduleHideControls(); }
+    } else {
+      if (ip) { pauseSim(); setControlsVisible(true); }
+      else { startSim(); scheduleHideControls(); }
+    }
+  };
+
+  const scheduleHideControls = () => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setControlsVisible(false), 1000);
+  };
+  const showControls = () => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    setControlsVisible(true);
+    if (ip) scheduleHideControls();
+  };
+
+  // Replay
+  const replay = () => {
+    const v = videoRef.current;
+    if (hasVideo && v) {
+      v.currentTime = 0;
+      v.play().catch(()=>{});
+      sp(true);
+      syncFromVideo();
+      scheduleHideControls();
+    } else {
+      stopSim();
+      startSim();
+      scheduleHideControls();
+    }
+  };
+
+  // ----- Video event handlers -----
+  const onVideoLoaded = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    setDuration(v.duration || parseDur(currentClip.duration));
+    if (v.captureStream) {
+      try { const t=v.captureStream().getVideoTracks()[0]; if(t&&t.getSettings) setFps(t.getSettings().frameRate||24); } catch{}
+    }
+    v.currentTime = 0;
+    setDisplayTime('00:00.00');
+    if (ip) syncFromVideo();
+  };
+  const onVideoEnded = () => { sa(c=>(c+1)%clips.length); setProgress(0); setDisplayTime('00:00.00'); stopRafSync(); };
+
+  // ----- Simulated timer (for non-video clips) -----
+  const simDur = 4000;
+  const startSim = () => { stopSim(); sp(true); const start = Date.now(); animRef.current=requestAnimationFrame(function tick(){const e=Date.now()-start;const pct=Math.min((e/simDur)*100,100);setProgress(pct);if(pct>=100){sa(c=>(c+1)%clips.length);setProgress(0);setDisplayTime('00:00.00');return;}setDisplayTime(fmtTime((pct/100)*parseDur(currentClip.duration)));animRef.current=requestAnimationFrame(tick);});};
+  const pauseSim = () => { stopSim(); sp(false); };
+  const stopSim = () => { if(animRef.current){cancelAnimationFrame(animRef.current);animRef.current=null;} };
+
+  const stopAll = () => {
+    const v = videoRef.current;
+    if (v) v.pause();
+    stopSim();
+    stopRafSync();
+    sp(false);
+  };
+
+  // ----- Scrub (using refs to avoid stale closure) -----
+  const isDragging = useRef(false);
+  const scrubRef = useRef(null);
+  const doScrub = (clientX) => {
+    const r = scrubRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const pct = Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100));
+    setProgress(pct);
+    const md = maxDurRef.current;
+    const sec = (pct / 100) * md;
+    setDisplayTime(fmtTime(sec, fpsRef.current));
+    const v = videoRef.current;
+    if (hasVideo && v && v.duration) v.currentTime = sec;
+  };
+  const onScrubStart = (e) => { e.preventDefault(); isDragging.current=true; doScrub(e.touches?e.touches[0].clientX:e.clientX); };
+  const onScrubMove = (e) => { if(!isDragging.current)return; doScrub(e.touches?e.touches[0].clientX:e.clientX); };
+  const onScrubEnd = () => { isDragging.current=false; };
+  useEffect(() => { document.addEventListener('mousemove',onScrubMove); document.addEventListener('mouseup',onScrubEnd); document.addEventListener('touchmove',onScrubMove); document.addEventListener('touchend',onScrubEnd); return ()=>{ document.removeEventListener('mousemove',onScrubMove); document.removeEventListener('mouseup',onScrubEnd); document.removeEventListener('touchmove',onScrubMove); document.removeEventListener('touchend',onScrubEnd); }; }, []);
+
+  useEffect(()=>()=>stopAll(),[]);
+
+  // Auto-generate video thumbnails for clips without covers
+  useEffect(() => {
+    const cleanups = {};
+    clips.forEach(c => {
+      const id = c.id;
+      if (!thumbAttemptedRef.current.has(id)) {
+        const cover = demoCoverMedia?.[id];
+        const media = demoReelMedia?.[id];
+        if (!cover && media?.type === 'video' && media?.url) {
+          thumbAttemptedRef.current.add(id);
+          const video = document.createElement('video');
+          video.muted = true; video.playsInline = true; video.preload = 'auto';
+          video.crossOrigin = 'anonymous'; video.src = media.url;
+          const onLoaded = () => { video.currentTime = 0.5; };
+          const onSeeked = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = video.videoWidth || 160;
+              canvas.height = video.videoHeight || 90;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              setVideoThumbnails(prev => ({ ...prev, [id]: canvas.toDataURL('image/jpeg', 0.6) }));
+            } catch (e) {}
+            cleanups[id]?.();
+          };
+          const onErr = () => { cleanups[id]?.(); };
+          video.addEventListener('loadeddata', onLoaded);
+          video.addEventListener('seeked', onSeeked);
+          video.addEventListener('error', onErr);
+          cleanups[id] = () => {
+            video.removeEventListener('loadeddata', onLoaded);
+            video.removeEventListener('seeked', onSeeked);
+            video.removeEventListener('error', onErr);
+            video.pause(); video.src = ''; video.load();
+          };
+        } else if (cover || (media && media?.type !== 'video')) {
+          // has cover or non-video media — skip thumb generation
+          thumbAttemptedRef.current.add(id);
+        }
+      }
+    });
+    return () => { Object.values(cleanups).forEach(fn => fn?.()); };
+  }, [clips, demoReelMedia, demoCoverMedia]);
+
+  // Auto-play next clip when loaded
+  useEffect(() => {
+    if (!ip || !hasVideo) return;
+    const v = videoRef.current;
+    if (!v || v.paused) { v?.play().catch(()=>{}); }
+    syncFromVideo();
+    scheduleHideControls();
+  }, [ac, hasVideo]);
+
+  const openLightbox = () => {
+    if (hasVideo && mediaData) setLightbox({ type: 'video', src: mediaData, title: currentClip.title, desc: currentClip.desc, color: currentClip.color, emoji: currentClip.emoji });
+    else if (mediaData) setLightbox({ type: 'image', src: mediaData, title: currentClip.title, desc: currentClip.desc, color: currentClip.color, emoji: currentClip.emoji });
+    else setLightbox({ type: 'placeholder', title: currentClip.title, desc: currentClip.desc, color: currentClip.color, emoji: currentClip.emoji });
+  };
+
+  return (
+    <section id="demo" ref={ref} className="py-24 sm:py-32 px-4 sm:px-6 md:px-8 lg:px-16 bg-bg relative">
+      <div className="dot-grid"></div>
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className={`reveal ${v?'visible':''} mb-12 sm:mb-16`}>
+          <SectionHeader number={2} title="动态展示" />
+        </div>
+        <div className={`reveal ${v?'visible':''} grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8`}>
+          <div className="lg:col-span-2 relative bg-bg rounded-md overflow-hidden border border-muted2/30 cursor-pointer" style={{aspectRatio:'16/9'}} onClick={openLightbox} onMouseEnter={showControls} onMouseMove={showControls} onMouseLeave={()=>{if(ip)scheduleHideControls();}}>
+            <div className="absolute inset-0 flex items-center justify-center" style={{backgroundColor:currentClip.color}}>
+              <div className="reel-scan-line absolute left-0 right-0 h-px bg-accent/20 pointer-events-none"/>
+              <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage:'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',backgroundSize:'40px 40px'}}/>
+              {mediaData ? (
+                <div className="absolute inset-0 z-10">
+                  {hasVideo
+                    ? <video ref={videoRef} src={mediaData} className="w-full h-full object-cover" playsInline preload="auto" onLoadedMetadata={onVideoLoaded} onEnded={onVideoEnded} />
+                    : <img src={mediaData} className="w-full h-full object-cover" />}
+                </div>
+              ) : (
+                <div className="text-center z-10"><span className="text-5xl sm:text-7xl block mb-3 sm:mb-4 opacity-30">{currentClip.emoji}</span><p className="font-mono text-text/80 text-xs sm:text-sm tracking-wider">{currentClip.title}</p></div>
+              )}
+            </div>
+            <button onClick={e => { e.stopPropagation(); togglePlay(); }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/85 hover:bg-white flex items-center justify-center transition-all duration-500 ease-out z-20 shadow-lg hover:scale-105" style={{opacity:controlsVisible?1:0, pointerEvents:controlsVisible?'auto':'none'}}>
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
+                {ip?<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>:<path d="M8 5v14l11-7z"/>}
+              </svg>
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm px-3 sm:px-4 pt-6 pb-2 sm:pb-2.5 z-30 transition-transform duration-500 ease-out" style={{transform: controlsVisible?'translateY(0)':'translateY(100%)'}} onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+                <button onClick={togglePlay} className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-white/80 hover:text-white"><svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">{ip?<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>:<path d="M8 5v14l11-7z"/>}</svg></button>
+                <button onClick={replay} className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-white/50 hover:text-white" title="重新播放"><svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
+                <div ref={scrubRef} className="flex-1 relative h-2 sm:h-2.5 bg-white/15 rounded-full overflow-hidden cursor-pointer group" onMouseDown={onScrubStart} onTouchStart={onScrubStart}>
+                  <div className="absolute top-0 bottom-0 left-0 bg-white/60 rounded-full transition-all duration-75" style={{width:`${progress}%`}}/>
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity shadow" style={{left:`${progress}%`}}/>
+                </div>
+                <span className="flex-shrink-0 font-mono text-[10px] sm:text-[11px] text-white/70 tracking-wider tabular-nums min-w-[80px] text-right">{displayTime} / {fmtTime(maxDur)}</span>
+              </div>
+              <div className="flex items-center"><p className="font-mono text-[9px] sm:text-[10px] text-white/60 truncate">{currentClip.title.split(' - ')[0]}</p></div>
+            </div>
+            <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-accent/20 pointer-events-none z-20"></div>
+            <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-accent/20 pointer-events-none z-20"></div>
+          </div>
+          <div className="relative h-full" style={{minHeight:0}}>
+            <div className="absolute inset-0 space-y-2 sm:space-y-3 overflow-y-auto overflow-x-hidden pr-1">
+            <div className="flex items-center justify-between mb-3 sm:mb-4"><h3 className="font-mono text-[11px] sm:text-xs text-muted tracking-[0.2em] uppercase">播放列表</h3><span className="font-mono text-[9px] sm:text-[10px] text-accent">{ip?'▶ 播放中':'■ 已暂停'}</span></div>
+            {clips.map((c,idx)=><button key={idx} onClick={()=>jumpToClip(idx)} className={`w-full text-left p-3 sm:p-4 rounded-sm transition-all duration-300 flex items-center gap-3 sm:gap-4 group hover:scale-[1.1] ${ac===idx?'bg-accent/8 border-l-2 border-accent scale-[1.1]':'bg-bg hover:bg-accent/5 border-l-2 border-transparent hover:border-l-accent/30'}`}>{demoCoverMedia[c.id] ? <img src={demoCoverMedia[c.id]} className="w-8 h-8 sm:w-10 sm:h-10 rounded-sm flex-shrink-0 object-cover shadow-sm" alt=""/> : videoThumbnails[c.id] ? <img src={videoThumbnails[c.id]} className="w-12 h-[27px] sm:w-[48px] sm:h-[27px] rounded-sm flex-shrink-0 object-cover shadow-sm" alt=""/> : <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-sm flex-shrink-0 flex items-center justify-center shadow-sm" style={{backgroundColor:c.color}}><span className="text-base sm:text-lg">{c.emoji}</span></div>}<div className="min-w-0 flex-1"><p className={`font-display text-[11px] sm:text-xs tracking-wide truncate ${ac===idx?'text-text':'text-muted group-hover:text-text/80'}`}>{c.title}</p><p className="font-mono text-[9px] sm:text-[10px] text-muted mt-0.5 truncate">{c.desc} <span className="text-muted2">{c.duration}</span></p></div></button>)}
+          </div>
+          </div>
+        </div>
+      </div>
+      {lightbox && <Lightbox media={lightbox} onClose={() => setLightbox(null)} />}
+    </section>
+  );
+}
+
+// ===== 技能雷达图 =====
+function RadarChart({ skills, highlightIndex, onHover }) {
+  const svgRef = useRef(null);
+  const [animatedLevels, setAl] = useState(skills.map(() => 0));
+  const [triggered, setTrig] = useState(false);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || triggered) return;
+    const o = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        setTrig(true);
+        o.unobserve(el);
+      }
+    }, { threshold: 0.3 });
+    o.observe(el);
+    return () => o.disconnect();
+  }, [triggered]);
+
+  useEffect(() => {
+    if (!triggered) return;
+    const timers = skills.map((s, i) =>
+      setTimeout(() => setAl(prev => { const n = [...prev]; n[i] = s.level; return n; }), 200 + i * 180)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [triggered, skills]);
+
+  const count = skills.length;
+  if (count < 3) return null;
+
+  const size = 400;
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = 150;
+  const levels = [0.2, 0.4, 0.6, 0.8, 1.0];
+
+  const getPoint = (angleDeg, r) => {
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
+  const angleStep = 360 / count;
+  const vertices = skills.map((_, i) => getPoint(i * angleStep, maxR));
+
+  // 背景网格多边形
+  const gridPolygons = levels.map(scale => {
+    const pts = skills.map((_, i) => {
+      const p = getPoint(i * angleStep, maxR * scale);
+      return `${p.x},${p.y}`;
+    }).join(' ');
+    return <polygon key={scale} points={pts} className="radar-grid" />;
+  });
+
+  // 高亮色块 wedge
+  const wedgeHalfAngle = angleStep * 0.18;
+  const wedges = (highlightIndex >= 0 && highlightIndex < count) ? (() => {
+    const hlAngle = highlightIndex * angleStep;
+    const la = hlAngle - wedgeHalfAngle;
+    const ra = hlAngle + wedgeHalfAngle;
+    const lp = getPoint(la, maxR);
+    const rp = getPoint(ra, maxR);
+    const pts = `${cx},${cy} ${lp.x},${lp.y} ${rp.x},${rp.y}`;
+    return [<polygon key="wedge" points={pts} className="radar-wedge" />];
+  })() : [];
+
+  // 轴线
+  const axes = vertices.map((v, i) => (
+    <line key={i} x1={cx} y1={cy} x2={v.x} y2={v.y}
+      className={highlightIndex === i ? 'radar-axis-highlight' : 'radar-axis'}
+    />
+  ));
+
+  // 数据多边形
+  const dataPts = skills.map((s, i) => getPoint(i * angleStep, maxR * animatedLevels[i] / 100));
+  const dataPolygon = dataPts.map(p => `${p.x},${p.y}`).join(' ');
+
+  // 数据顶点圆点 + 高亮辉光环
+  const dots = dataPts.flatMap((p, i) => {
+    const isHL = highlightIndex === i;
+    const elems = [
+      <circle key={'dot'+i} cx={p.x} cy={p.y} r={isHL ? 7 : 4}
+        className={isHL ? 'radar-dot radar-dot-highlight' : 'radar-dot'}
+        style={{cursor:'pointer'}}
+        onMouseEnter={() => onHover && onHover(i)}
+        onMouseLeave={() => onHover && onHover(-1)}
+      />
+    ];
+    if (isHL) {
+      elems.push(<circle key={'glow'+i} cx={p.x} cy={p.y} r={4} className="radar-glow active" />);
+    }
+    return elems;
+  });
+
+  // 标签
+  const labels = vertices.map((v, i) => {
+    const dx = v.x - cx;
+    const dy = v.y - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const lx = cx + nx * (maxR + 40);
+    const ly = cy + ny * (maxR + 40);
+    const isHL = highlightIndex === i;
+    return (
+      <text key={i} x={lx} y={ly} className={isHL ? 'radar-label radar-label-highlight' : 'radar-label'} dominantBaseline="middle"
+        onMouseEnter={() => onHover && onHover(i)}
+        onMouseLeave={() => onHover && onHover(-1)}
+      >{skills[i].name}</text>
+    );
+  });
+
+  // 数值标签
+  const valueLabels = vertices.map((v, i) => {
+    const dx = v.x - cx;
+    const dy = v.y - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const vlx = cx + nx * (maxR * animatedLevels[i] / 100 + 18);
+    const vly = cy + ny * (maxR * animatedLevels[i] / 100 + 18);
+    const isHL = highlightIndex === i;
+    return (
+      <text key={i} x={vlx} y={vly} className={isHL ? 'radar-value radar-value-highlight' : 'radar-value'} dominantBaseline="middle">{Math.round(animatedLevels[i])}%</text>
+    );
+  });
+
+  return (
+    <div className="flex justify-center">
+      <svg ref={svgRef} viewBox={`0 0 ${size} ${size}`} width="100%" style={{maxWidth:'400px', overflow:'visible'}}>
+        {gridPolygons}
+        {wedges}
+        {axes}
+        <polygon points={dataPolygon} className="radar-area" />
+        {dots}
+        {labels}
+        {triggered && valueLabels}
+      </svg>
+    </div>
+  );
+}
+
+function Skills() {
+  const [ref,v]=useReveal(); const { skills, tags }=useContext(AppContext);
+  const sk = (skills && skills.length>0) ? skills : defaultSkills;
+  const tg = (tags && tags.length>0) ? tags : defaultTags;
+  const [hoverIndex, setHoverIndex] = useState(-1);
+
+  return (
+    <section id="skills" ref={ref} className="py-24 sm:py-32 px-4 sm:px-6 md:px-8 lg:px-16 bg-bg relative">
+      <div className="corner-deco tr" style={{top:0,right:0,right:'-10px',top:'-10px',borderTop:'2px solid',borderRight:'2px solid',position:'absolute'}}></div>
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className={`reveal ${v?'visible':''} mb-12 sm:mb-16`}>
+          <SectionHeader number={3} title="技能" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 sm:gap-16 items-center">
+          {/* 雷达图 */}
+          <div className={`reveal ${v?'visible':''} lg:col-span-3`} style={{transitionDelay:'0.1s'}}>
+            <RadarChart skills={sk} highlightIndex={hoverIndex} onHover={setHoverIndex} />
+          </div>
+          {/* 能力标签 + 分数条 */}
+          <div className={`reveal ${v?'visible':''} lg:col-span-2 space-y-6 sm:space-y-8`} style={{transitionDelay:'0.3s'}}>
+            {/* 分数排名 */}
+            <div className="space-y-4 sm:space-y-5">
+              {sk.map((s, idx) => (
+                <div key={s.name}
+                  className={`skill-row flex items-center gap-3 ${hoverIndex === idx ? 'hovered' : ''}`}
+                  style={{transitionDelay:`${idx*0.1}s`,opacity:v?1:0,transform:v?'translateX(0)':'translateX(20px)',transition:'all 0.5s ease'}}
+                  onMouseEnter={() => setHoverIndex(idx)}
+                  onMouseLeave={() => setHoverIndex(-1)}
+                >
+                  <span className="font-mono text-[10px] sm:text-xs text-muted2 w-6 text-right">{idx+1}</span>
+                  <span className="font-display text-sm sm:text-base text-text flex-1">{s.name}</span>
+                  <span className={`font-mono text-xl sm:text-2xl font-bold skill-score ${hoverIndex === idx ? 'text-accent' : ''}`} style={{transition:'color 0.3s ease'}}>{s.level}</span>
+                </div>
+              ))}
+            </div>
+            {/* 能力标签 */}
+            <div className="pt-6 border-t border-muted2/30">
+              <h3 className="font-mono text-[10px] sm:text-[11px] text-muted tracking-[0.2em] uppercase mb-4">能力标签</h3>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {tg.map((t, idx) => (
+                  <span key={t+idx} className="font-mono text-[10px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-accent2/40 text-accent2 transition-all duration-300 hover:bg-accent2/8 hover:border-accent2"
+                    style={{transitionDelay:`${idx*60}ms`,opacity:v?1:0,transform:v?'translateY(0)':'translateY(12px)'}}>{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ===== 经历 =====
+// ===== 经历（横轴交互式时间线） =====
+function Timeline() {
+  const [ref,v]=useReveal(); const { timeline }=useContext(AppContext);
+  const tl = (timeline && timeline.length>0) ? timeline : defaultTimeline;
+  const scrollRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [hoverIdx, setHoverIdx] = useState(-1);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, scroll: 0 });
+
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardW = el.firstChild?.offsetWidth || 300;
+    const idx = Math.round(el.scrollLeft / (cardW + 24));
+    setActiveIdx(Math.min(idx, tl.length - 1));
+  }, [tl.length]);
+
+  const jumpTo = i => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardW = el.firstChild?.offsetWidth || 300;
+    el.scrollTo({ left: i * (cardW + 24), behavior: 'smooth' });
+  };
+
+  const onMouseDown = e => {
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX, scroll: scrollRef.current?.scrollLeft || 0 };
+  };
+  const onMouseMove = e => {
+    if (!isDragging || !scrollRef.current) return;
+    const dx = dragStart.current.x - e.clientX;
+    scrollRef.current.scrollLeft = dragStart.current.scroll + dx;
+  };
+  const onMouseUp = () => setIsDragging(false);
+
+  const accentColors = ['#ff6b6b','#4ecdc4','#ffa245','#6c5ce7'];
+  return (
+    <section id="timeline" ref={ref} className="py-24 sm:py-32 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-16">
+        <div className={`reveal ${v?'visible':''} mb-10 sm:mb-14`}>
+          <SectionHeader number={4} title="经历" />
+        </div>
+      </div>
+      {/* 横向滚动轨道 */}
+      <div className={`reveal ${v?'visible':''} relative`} style={{transitionDelay:'0.2s'}}>
+        {/* 轨道装饰线 */}
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-muted2/30 -translate-y-1/2 pointer-events-none" />
+        {/* 左右位移箭头 */}
+        <button className={`carousel-arrow left ${activeIdx<=0?'opacity-30 pointer-events-none':''}`} style={{top:'50%'}} onClick={()=>jumpTo(activeIdx-1)}>&#8249;</button>
+        <button className={`carousel-arrow right ${activeIdx>=tl.length-1?'opacity-30 pointer-events-none':''}`} style={{top:'50%'}} onClick={()=>jumpTo(activeIdx+1)}>&#8250;</button>
+        {/* 卡片容器 */}
+        <div className="flex justify-center max-w-full">
+        <div ref={scrollRef} onScroll={onScroll}
+          className={`inline-flex gap-6 sm:gap-8 px-4 sm:px-6 md:px-12 lg:px-24 overflow-x-auto pb-8 pt-4 snap-x snap-mandatory max-w-full ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+          style={{scrollbarWidth:'none', msOverflowStyle:'none'}}
+          onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
+          {tl.map((item, idx) => {
+            const color = accentColors[idx % accentColors.length];
+            const isActive = idx === activeIdx;
+            const isHovered = idx === hoverIdx;
+            const emphasized = hoverIdx >= 0 ? idx === hoverIdx : isActive;
+            return (
+              <div key={idx} className="flex-shrink-0 snap-center" style={{width:'min(85vw, 380px)'}} onMouseEnter={()=>setHoverIdx(idx)} onMouseLeave={()=>setHoverIdx(-1)}>
+                <div className={`relative bg-bg border rounded-md p-6 sm:p-8 transition-all duration-400 ${emphasized ? 'shadow-lg scale-[1.08] border-accent/40' : 'shadow-sm border-muted2/20 hover:shadow-md hover:scale-[1.08]'}`}>
+                  {/* 顶部色条 */}
+                  <div className="absolute top-0 left-4 right-4 h-1 rounded-b-sm" style={{backgroundColor:color}} />
+                  {/* 年份徽章 */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="font-mono text-xs tracking-widest px-3 py-1 rounded-sm text-white font-bold" style={{backgroundColor:color}}>{item.year}</span>
+                    <div className="flex-1 h-px bg-muted2/30" />
+                    <span className="font-mono text-[10px] text-muted">{idx+1}/{tl.length}</span>
+                  </div>
+                  {/* 标题 */}
+                  <h3 className="font-display text-xl sm:text-2xl text-text mb-2 leading-tight">{item.title}</h3>
+                  <p className="font-mono text-xs text-accent2 tracking-wide mb-3">{item.org}</p>
+                  <p className="font-mono text-sm text-muted leading-relaxed">{item.desc}</p>
+                  {/* 底部连接线 */}
+                  <div className="mt-5 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{backgroundColor:color,opacity:0.6}} />
+                    <div className="flex-1 h-px" style={{background:`linear-gradient(90deg, ${color}44, transparent)`}} />
+                  </div>
+                </div>
+                {/* 轨道节点 */}
+                <div className="flex justify-center mt-5">
+                  <div className={`w-3 h-3 rounded-full transition-all duration-300 ${emphasized?'scale-125 shadow-md':'bg-muted2/50'}`}
+                    style={{backgroundColor:emphasized?color:'', cursor:'pointer', boxShadow:emphasized?`0 0 8px ${color}66`:''}}
+                    onClick={() => jumpTo(idx)} />
+                </div>
+              </div>
+          )})}
+        </div>
+        </div>
+      </div>
+      {/* 底部导航点 */}
+      <div className="flex justify-center gap-3 mt-8">
+        {tl.map((_, i) => (
+          <button key={i} onClick={() => jumpTo(i)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${i===activeIdx?'bg-accent w-6':'bg-muted2/40 hover:bg-muted2'}`} />
+        ))}
+      </div>
+      <style>{`#timeline [ref]::-webkit-scrollbar{display:none}`}</style>
+    </section>
+  );
+}
+
+// ===== 联系 =====
+function Contact() {
+  const [ref,v]=useReveal(); const { contact, resumeFile }=useContext(AppContext);
+  const items = Array.isArray(contact) ? contact : (contact && typeof contact==='object') ? [{id:1,label:'邮箱',type:'email',value:contact.email||'chenmo@example.com'},{id:2,label:'Bilibili',type:'link',value:contact.bilibili||'#'},{id:3,label:'小红书',type:'link',value:contact.xiaohongshu||'#'},{id:4,label:'Vimeo',type:'link',value:contact.vimeo||'#'}] : [];
+  const emails = items.filter(c => c.type === 'email');
+  const links = items.filter(c => c.type !== 'email');
+  return (
+    <section id="contact" ref={ref} className="py-24 sm:py-32 px-4 sm:px-6 text-center relative overflow-hidden" style={{background:'#1a1a1e'}}>
+      <div className="dot-grid" style={{opacity:0.08}}></div>
+      <div className={`reveal ${v?'visible':''} relative z-10`}>
+        <div className="mb-12 sm:mb-16">
+          <p className="font-mono text-[10px] sm:text-[11px] tracking-[0.3em] text-white/20 mb-3">05</p>
+          <div className="flex items-center justify-center gap-4">
+            <div className="h-px flex-1 max-w-6" style={{background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.3))'}}></div>
+            <h2 className="font-display text-3xl sm:text-4xl text-white">联系</h2>
+            <div className="h-px flex-1 max-w-6" style={{background:'linear-gradient(90deg, rgba(255,255,255,0.3), transparent)'}}></div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-4 sm:gap-6 mt-8">
+          {emails.map(c => <a key={c.id} href={`mailto:${c.value}`} className="font-mono text-white/80 hover:text-accent transition-colors text-base sm:text-lg">{c.value}</a>)}
+          {resumeFile&&<div className="flex items-center gap-3 rounded-sm px-4 sm:px-5 py-2.5 sm:py-3 border border-white/10" style={{background:'rgba(255,255,255,0.04)'}}><svg className="w-4 h-4 sm:w-5 sm:h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div className="text-left"><p className="font-display text-[11px] sm:text-xs text-white/80">{resumeFile.name}</p><p className="font-mono text-[9px] sm:text-[10px] text-white/30">{resumeFile.size>1024*1024?(resumeFile.size/(1024*1024)).toFixed(1)+' MB':(resumeFile.size/1024).toFixed(0)+' KB'}</p></div><a href="#" className="font-mono text-[9px] sm:text-[10px] text-accent2 hover:underline ml-3 sm:ml-4">下载</a></div>}
+          <div className="flex gap-6 sm:gap-8 flex-wrap justify-center">
+            {links.map(c=><a key={c.id} href={c.value||'#'} target="_blank" rel="noopener noreferrer" className="font-mono text-xs sm:text-sm text-white/40 hover:text-accent2 transition-colors">{c.label}</a>)}
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6"><div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent2 status-dot"/><span className="font-mono text-[10px] sm:text-xs text-accent2 tracking-wider">接受自由职业委托</span></div>
+        </div>
+        <p className="font-mono text-[9px] sm:text-[10px] text-white/10 mt-16 sm:mt-20 tracking-wider">2025</p>
+      </div>
+    </section>
+  );
+}
+
+function App() {
+  const [data,setData]=useState({});
+  const [carouselImages, setCarouselImages] = useState({});
+  const [portfolioFiles, setPortfolioFiles] = useState({});
+  const [demoReelMedia, setDemoReelMedia] = useState({});
+  const [demoCoverMedia, setDemoCoverMedia] = useState({});
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => { initDb().then(() => setDbReady(true)).catch(() => {}); }, []);
+
+  useEffect(() => {
+    if (!dbReady) return;
+    getMedia('avatar').then(r => { if (r) setAvatarUrl(getMediaURL(r)); }).catch(() => {});
+  }, [dbReady]);
+
+  useEffect(()=>{
+    setData(loadData());
+    const onStorage=()=>setData(loadData());
+    window.addEventListener('storage',onStorage);
+    return ()=>window.removeEventListener('storage',onStorage);
+  },[]);
+
+  useEffect(() => {
+    if (!dbReady) return;
+    const slides = data.carouselSlides || defaultCarouselSlides;
+    const promises = slides.map(s => {
+      if (s.bgImage) return getMedia(`carousel_${s.id}`).then(r => r ? [s.id, getMediaURL(r)] : null).catch(() => null);
+      return Promise.resolve(null);
+    });
+    Promise.all(promises).then(results => {
+      const imgs = {};
+      results.forEach(r => { if (r) imgs[r[0]] = r[1]; });
+      setCarouselImages(imgs);
+    });
+  }, [data.carouselSlides, dbReady]);
+
+  useEffect(() => {
+    if (!dbReady) return;
+    const ids = Object.keys(data.portfolioMeta || {}).map(Number);
+    if (ids.length === 0) { setPortfolioFiles({}); return; }
+    const promises = ids.map(id =>
+      getMedia(id).then(r => r ? [id, getMediaURL(r)] : null).catch(() => null)
+    );
+    Promise.all(promises).then(results => {
+      const files = {};
+      results.forEach(r => { if (r) files[r[0]] = r[1]; });
+      setPortfolioFiles(files);
+    });
+  }, [data.portfolioMeta, dbReady]);
+
+  useEffect(() => {
+    if (!dbReady || !data.demoReel) return;
+    const clips = data.demoReel || [];
+    const promises = clips.map(c =>
+      getMedia(`demo_${c.id}`).then(r => r ? [c.id, {url: getMediaURL(r), type: r.type}] : null).catch(() => null)
+    );
+    Promise.all(promises).then(results => {
+      const media = {};
+      results.forEach(r => { if (r) media[r[0]] = r[1]; });
+      setDemoReelMedia(media);
+    });
+  }, [data.demoReel, dbReady]);
+
+  useEffect(() => {
+    if (!dbReady || !data.demoReel) return;
+    const clips = data.demoReel || [];
+    const promises = clips.map(c =>
+      getMedia(`drCover_${c.id}`).then(r => r ? [c.id, getMediaURL(r)] : null).catch(() => null)
+    );
+    Promise.all(promises).then(results => {
+      const covers = {};
+      results.forEach(r => { if (r) covers[r[0]] = r[1]; });
+      setDemoCoverMedia(covers);
+    });
+  }, [data.demoReel, dbReady]);
+
+  const ctx = {
+    personalInfo: data.personalInfo, portfolioMeta: data.portfolioMeta,
+    portfolioMedia: data.portfolioMedia, portfolioFiles, portfolioOrder: data.portfolioOrder,
+    demoReel: data.demoReel, demoReelMedia, demoCoverMedia, carouselSlides: data.carouselSlides,
+    carouselImages,
+    skills: data.skills, tags: data.tags, timeline: data.timeline,
+    contact: data.contact, avatar: avatarUrl, resumeFile: data.resumeFile,
+  };
+  return (<AppContext.Provider value={ctx}><Navbar/><HeroCarousel/><Portfolio/><DemoReel/><Skills/><Timeline/><Contact/></AppContext.Provider>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
