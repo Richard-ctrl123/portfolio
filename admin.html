@@ -75,6 +75,7 @@ tailwind.config = {
 <div id="root"></div>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="embedded.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
 const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
@@ -200,8 +201,12 @@ const getTotalMediaSize = () => new Promise((resolve, reject) => {
 });
 
 function loadState() {
-  try { return {...defaultState, ...JSON.parse(localStorage.getItem(STORAGE_KEY))}; }
-  catch { return {...defaultState}; }
+  try {
+    const ls = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (ls && Object.keys(ls).length > 0) return {...defaultState, ...ls};
+  } catch {}
+  if (typeof EMBEDDED_DATA !== 'undefined') return {...defaultState, ...EMBEDDED_DATA};
+  return {...defaultState};
 }
 
 function saveState(s) {
